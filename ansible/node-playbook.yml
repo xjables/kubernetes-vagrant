@@ -1,0 +1,30 @@
+---
+- hosts: all
+  become: true
+  tasks:
+  - name: Install packages that allow apt to be used over HTTPS
+    apt:
+      name: "{{ packages }}"
+      state: present
+      update_cache: yes
+    vars:
+      packages:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg-agent
+      - software-properties-common
+
+  - name: Copy join command to server location
+    command: cp /vagrant/ansible/join-command /tmp/join-command.sh
+
+  - name: Set x bit on join command
+    ansible.builtin.file:
+      mode: 0777
+      path: /tmp/join-command.sh
+
+  - name: Join the node to cluster
+    ansible.builtin.command:
+      cmd: sh /tmp/join-command.sh
+      creates: /etc/kubernetes/kubelet.conf
+
